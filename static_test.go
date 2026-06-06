@@ -2,6 +2,7 @@ package ginx
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -249,7 +250,7 @@ func TestServer_ServeStaticFS_Integration(t *testing.T) {
 
 	time.Sleep(200 * time.Millisecond)
 
-	tr := &http.Transport{}
+	tr := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
 	client := &http.Client{Transport: tr, Timeout: 2 * time.Second}
 	resp, err := client.Get("https://" + s.ListenerAddr() + "/static/hello.txt")
 	if err != nil {
@@ -296,7 +297,7 @@ func TestServer_ServeStaticDir_Integration(t *testing.T) {
 
 	time.Sleep(200 * time.Millisecond)
 
-	tr := &http.Transport{}
+	tr := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
 	client := &http.Client{Transport: tr, Timeout: 2 * time.Second}
 	resp, err := client.Get("https://" + s.ListenerAddr() + "/files/info.txt")
 	if err != nil {
@@ -344,7 +345,7 @@ func TestServer_SPA_Fallback_GET(t *testing.T) {
 
 	time.Sleep(200 * time.Millisecond)
 
-	tr := &http.Transport{}
+	tr := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
 	client := &http.Client{Transport: tr, Timeout: 2 * time.Second}
 
 	// 已知文件应该被 ServeStaticFS 匹配
@@ -401,7 +402,7 @@ func TestServer_SPA_POST_Returns404(t *testing.T) {
 
 	time.Sleep(200 * time.Millisecond)
 
-	tr := &http.Transport{}
+	tr := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
 	client := &http.Client{Transport: tr, Timeout: 2 * time.Second}
 	resp, err := client.Post("https://"+s.ListenerAddr()+"/random-path", "text/plain", nil)
 	if err != nil {
@@ -443,7 +444,7 @@ func TestServer_WithoutSPA_NoRouteReturnsJSON404(t *testing.T) {
 
 	time.Sleep(200 * time.Millisecond)
 
-	tr := &http.Transport{}
+	tr := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
 	client := &http.Client{Transport: tr, Timeout: 2 * time.Second}
 	resp, err := client.Get("https://" + s.ListenerAddr() + "/nonexistent")
 	if err != nil {
@@ -493,7 +494,7 @@ func TestServer_MultipleStaticPrefixes(t *testing.T) {
 
 	time.Sleep(200 * time.Millisecond)
 
-	tr := &http.Transport{}
+	tr := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
 	client := &http.Client{Transport: tr, Timeout: 2 * time.Second}
 
 	resp1, _ := client.Get("https://" + s.ListenerAddr() + "/assets/a.txt")

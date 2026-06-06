@@ -350,13 +350,19 @@ func (s *Server) Start() error {
 		s.engine.Use(mw)
 	}
 
-	// 6. 注册 Route
+	// 6. 注册静态文件服务（必须在路由之前，因为 serveStaticFS("/")
+	//    会注册 /*filepath 通配路由，Gin 要求 catch-all 先于具体路径插入）
+	for _, entry := range s.staticEntries {
+		s.engine.StaticFS(entry.prefix, entry.fs)
+	}
+
+	// 7. 注册 Route
 	for _, route := range s.routes {
 		handlers := append(route.Middleware, route.Handler)
 		s.engine.Handle(route.Method, route.Path, handlers...)
 	}
 
-	// 7. 注册 RouteGroup
+	// 8. 注册 RouteGroup
 	for _, entry := range s.routeGroups {
 		rg := &RouteGroup{prefix: entry.prefix}
 		entry.fn(rg)
@@ -366,37 +372,44 @@ func (s *Server) Start() error {
 		}
 	}
 
-	// 8. 注册 /health
+	// 9. 注册 /health（若 staticEntries 有 "/" 前缀则跳过，
+	//    因为 Gin radix tree 不允许通配 /*filepath 与静态 /health 共存）
 	healthPath := s.config.HealthPath
-	healthRegistered := false
-	for _, route := range s.routes {
-		if route.Path == healthPath {
-			healthRegistered = true
+	healthBlocked := false
+	for _, entry := range s.staticEntries {
+		if entry.prefix == "/" || entry.prefix == "" {
+			healthBlocked = true
 			break
 		}
 	}
-	if !healthRegistered {
-		for _, entry := range s.routeGroups {
-			rg := &RouteGroup{prefix: entry.prefix}
-			entry.fn(rg)
-			for _, route := range rg.flatten() {
-				if route.Path == healthPath {
-					healthRegistered = true
-					break
-				}
-			}
-			if healthRegistered {
+	if !healthBlocked {
+		healthRegistered := false
+		for _, route := range s.routes {
+			if route.Path == healthPath {
+				healthRegistered = true
 				break
 			}
 		}
-	}
-	if !healthRegistered {
-		s.engine.GET(healthPath, healthHandler(s.startTime))
-	}
-
-	// 9. 注册静态文件服务
-	for _, entry := range s.staticEntries {
-		s.engine.StaticFS(entry.prefix, entry.fs)
+		if !healthRegistered {
+			for _, entry := range s.routeGroups {
+				rg := &RouteGroup{prefix: entry.prefix}
+				entry.fn(rg)
+				for _, route := range rg.flatten() {
+					if route.Path == healthPath {
+						healthRegistered = true
+						break
+					}
+				}
+				if healthRegistered {
+					break
+				}
+			}
+		}
+		if !healthRegistered {
+			s.engine.GET(healthPath, healthHandler(s.startTime))
+		}
+	} else {
+		s.logger.Info(ctx, "ginx：ServeStaticFS(\"/\") 已占用根路径，跳过 /health 端点注册")
 	}
 
 	// 10. NoRoute / NoMethod 兜底
