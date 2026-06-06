@@ -78,7 +78,9 @@ func (s *Server) EnableSPA(filesys http.FileSystem, indexPath string) *Server {
 }
 
 // spaNoRoute 返回一个 SPA 模式的 NoRoute Handler。
-// GET/HEAD 请求返回 index 文件，其他方法返回标准 JSON 404。
+// GET/HEAD 请求先尝试从 FileSystem 提供请求路径对应的文件；
+// 若文件不存在，则回退到指定的 index 文件（SPA fallback）。
+// 非 GET/HEAD 请求返回标准 JSON 404。
 //
 // 注意：不使用 c.FileFromFS()，因为 http.serveFile 会对以
 // "/index.html" 结尾的 URL 触发 301 重定向（clean URL 机制）。
@@ -86,6 +88,24 @@ func (s *Server) EnableSPA(filesys http.FileSystem, indexPath string) *Server {
 func spaNoRoute(filesys http.FileSystem, indexPath string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if c.Request.Method == http.MethodGet || c.Request.Method == http.MethodHead {
+			// 优先尝试提供请求路径对应的静态文件
+			reqPath := c.Request.URL.Path
+			if f, err := filesys.Open(reqPath); err == nil {
+				stat, statErr := f.Stat()
+				f.Close()
+				if statErr == nil && !stat.IsDir() {
+					// 文件存在，直接提供
+					f2, err2 := filesys.Open(reqPath)
+					if err2 == nil {
+						defer f2.Close()
+						stat2, _ := f2.Stat()
+						http.ServeContent(c.Writer, c.Request, reqPath, stat2.ModTime(), f2)
+						return
+					}
+				}
+			}
+
+			// 文件不存在，回退到 SPA index 文件
 			file, err := filesys.Open(indexPath)
 			if err != nil {
 				writeJSON(c, http.StatusNotFound, "请求的资源不存在", nil)
