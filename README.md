@@ -33,6 +33,7 @@
   - [IP 限流](#8-ip-限流)
   - [健康检查](#9-健康检查)
   - [优雅关闭](#10-优雅关闭)
+  - [静态文件服务与 SPA](#11-静态文件服务与-spa)
 - [API 参考](#-api-参考)
 - [配置参考](#-配置参考)
 - [内置中间件](#-内置中间件)
@@ -493,6 +494,75 @@ ginx.GracefulShutdown(
 )
 ```
 
+### 11. 静态文件服务与 SPA
+
+ginx 支持从本地目录或 Go embed.FS 提供静态文件，并内置 SPA 回退模式（未匹配的 GET 请求自动返回 index.html）。
+
+#### 本地目录
+
+```go
+s := ginx.NewServer(cfg).
+    UseHttp2Listen(":443").
+    ServeStaticDir("/assets", "./public").  // 等价于 gin.Static()
+    RegisterRoute(ginx.Route{
+        Method: "GET", Path: "/api/hello",
+        Handler: helloHandler,
+    })
+```
+
+#### 嵌入式文件系统（embed.FS）
+
+```go
+//go:embed all:frontend/dist
+var distFS embed.FS
+
+func main() {
+    s := ginx.NewServer(cfg).
+        UseHttp2Listen(":443").
+        ServeStaticFS("/", http.FS(distFS)).  // 等价于 gin.StaticFS()
+        RegisterRoute(...).
+        Start()
+}
+```
+
+#### SPA 模式
+
+当使用 Vue Router / React Router 等客户端路由时，浏览器直接访问 `/dashboard` 在服务端没有对应文件，需要回退到 `index.html`：
+
+```go
+//go:embed all:frontend/dist
+var spaAssets embed.FS
+
+func main() {
+    distFS, _ := fs.Sub(spaAssets, "frontend/dist")
+
+    err := ginx.NewServer(cfg).
+        UseHttp2Listen(":443").
+        ServeStaticFS("/", http.FS(distFS)).        // 提供所有静态文件
+        EnableSPA(http.FS(distFS), "index.html").     // SPA 回退
+        RegisterRoute(ginx.Route{
+            Method: "GET", Path: "/api/hello",
+            Handler: helloHandler,
+        }).
+        Start()
+}
+```
+
+> **SPA 回退规则**：仅对未匹配的 GET/HEAD 请求返回 index.html。POST/PUT/DELETE 等非 GET/HEAD 请求仍返回标准 JSON 404/405 响应。API 路由优先于 SPA 回退。
+
+#### 多静态前缀
+
+同时提供多个静态目录或文件系统：
+
+```go
+s.ServeStaticDir("/docs", "./public/docs").
+  ServeStaticFS("/admin", http.FS(adminFS)).
+  ServeStaticFS("/", http.FS(distFS)).
+  EnableSPA(http.FS(distFS), "index.html")
+```
+
+> **注意**：`ServeStaticDir` 使用 `http.Dir` 实现，在 Linux 下与 SPA 的 `EnableSPA` 无冲突。各前缀通过 gin 的 radix tree 独立路由，互不干扰。
+
 ---
 
 ## 📋 API 参考
@@ -531,6 +601,9 @@ ginx.GracefulShutdown(
 | `EnableMiddleware(mt ...MiddlewareType) *Server` | 启用内置中间件（RateLimit 需用 EnableRateLimit） |
 | `EnableRateLimit(opts RateLimitOptions) *Server` | 启用 IP 令牌桶限流 |
 | `DisableRateLimit() *Server` | 禁用 IP 限流 |
+| `ServeStaticDir(prefix, root string) *Server` | 从本地目录提供静态文件 |
+| `ServeStaticFS(prefix string, fs http.FileSystem) *Server` | 从 http.FileSystem 提供静态文件（支持 embed.FS） |
+| `EnableSPA(fs http.FileSystem, indexPath string) *Server` | 启用 SPA 回退模式 |
 
 ### 数据类型
 

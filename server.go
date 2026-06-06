@@ -34,6 +34,8 @@ type Server struct {
 	logger       Logger
 	routes       []Route
 	routeGroups  []routeGroupEntry
+	staticEntries []staticEntry
+	spa          *spaConfig
 	mwManager    *middleware.Manager
 	rateLimiter  *middleware.RateLimiter
 	engine       *gin.Engine
@@ -392,9 +394,18 @@ func (s *Server) Start() error {
 		s.engine.GET(healthPath, healthHandler(s.startTime))
 	}
 
-	// 9. NoRoute / NoMethod 兜底
+	// 9. 注册静态文件服务
+	for _, entry := range s.staticEntries {
+		s.engine.StaticFS(entry.prefix, entry.fs)
+	}
+
+	// 10. NoRoute / NoMethod 兜底
 	s.engine.HandleMethodNotAllowed = true
-	s.engine.NoRoute(noRouteHandler)
+	if s.spa != nil {
+		s.engine.NoRoute(spaNoRoute(s.spa.fs, s.spa.indexPath))
+	} else {
+		s.engine.NoRoute(noRouteHandler)
+	}
 	s.engine.NoMethod(noMethodHandler)
 
 	// 10. 创建并启动各通道 Listener
