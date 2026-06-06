@@ -143,7 +143,7 @@ curl -k https://localhost:8443/health
 ## 📦 安装
 
 ```bash
-go get github.com/lcylpzlz/ginx@v0.9.0
+go get github.com/lcylpzlz/ginx@latest
 ```
 
 **依赖项：**
