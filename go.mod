@@ -1,4 +1,4 @@
-module github.com/lcylpzlz/ginx
+module github.com/lcylpzls/ginx
 
 go 1.26.0
 

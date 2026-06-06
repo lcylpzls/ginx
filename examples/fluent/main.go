@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/lcylpzlz/ginx"
+	"github.com/lcylpzls/ginx"
 )
 
 func main() {

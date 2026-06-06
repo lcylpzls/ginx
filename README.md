@@ -3,7 +3,7 @@
 <div align="center">
 
 [![Go Version](https://img.shields.io/badge/Go-%3E%3D%201.21-00ADD8?style=flat&logo=go)](https://go.dev/)
-[![Go Reference](https://pkg.go.dev/badge/github.com/lcylpzlz/ginx.svg)](https://pkg.go.dev/github.com/lcylpzlz/ginx)
+[![Go Reference](https://pkg.go.dev/badge/github.com/lcylpzls/ginx.svg)](https://pkg.go.dev/github.com/lcylpzls/ginx)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Coverage](https://img.shields.io/badge/coverage-83.8%25-brightgreen.svg)]()
 
@@ -93,7 +93,7 @@ import (
     "time"
 
     "github.com/gin-gonic/gin"
-    "github.com/lcylpzlz/ginx"
+    "github.com/lcylpzls/ginx"
 )
 
 func main() {
@@ -144,7 +144,7 @@ curl -k https://localhost:8443/health
 ## 📦 安装
 
 ```bash
-go get github.com/lcylpzlz/ginx@latest
+go get github.com/lcylpzls/ginx@latest
 ```
 
 **依赖项：**
@@ -208,7 +208,7 @@ package main
 
 import (
     "time"
-    "github.com/lcylpzlz/ginx"
+    "github.com/lcylpzls/ginx"
 )
 
 func main() {

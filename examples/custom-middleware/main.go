@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/lcylpzlz/ginx"
+	"github.com/lcylpzls/ginx"
 )
 
 // CustomLogger 演示自定义 Logger 实现。

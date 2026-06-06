@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/lcylpzlz/ginx/middleware"
+	"github.com/lcylpzls/ginx/middleware"
 	"github.com/quic-go/quic-go"
 	"github.com/quic-go/quic-go/http3"
 )
@@ -30,20 +30,20 @@ type routeGroupEntry struct {
 // 通过链式 API 进行配置，调用 Start() 启动服务，Stop(ctx) 优雅关闭。
 // v0.2.0 起支持 HTTP/2、HTTP/3 (QUIC) 和 Unix Socket 多通道同时监听。
 type Server struct {
-	config       Config
-	logger       Logger
-	routes       []Route
-	routeGroups  []routeGroupEntry
+	config        Config
+	logger        Logger
+	routes        []Route
+	routeGroups   []routeGroupEntry
 	staticEntries []staticEntry
-	spa          *spaConfig
-	mwManager    *middleware.Manager
-	rateLimiter  *middleware.RateLimiter
-	engine       *gin.Engine
-	startTime    time.Time
-	started      bool
-	mu           sync.Mutex
-	shutdownOnce sync.Once
-	cleanupFuncs []func()
+	spa           *spaConfig
+	mwManager     *middleware.Manager
+	rateLimiter   *middleware.RateLimiter
+	engine        *gin.Engine
+	startTime     time.Time
+	started       bool
+	mu            sync.Mutex
+	shutdownOnce  sync.Once
+	cleanupFuncs  []func()
 
 	// 多 Listener 管理
 	listeners   []net.Listener

@@ -1,10 +1,10 @@
-module github.com/lcylpzlz/ginx/examples/basic
+module github.com/lcylpzls/ginx/examples/basic
 
 go 1.26.0
 
 require (
 	github.com/gin-gonic/gin v1.10.1
-	github.com/lcylpzlz/ginx v0.0.0
+	github.com/lcylpzls/ginx v0.0.0
 )
 
 require (
@@ -46,4 +46,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/lcylpzlz/ginx => ../../
+replace github.com/lcylpzls/ginx => ../../
