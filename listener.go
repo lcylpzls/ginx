@@ -55,6 +55,11 @@ func createQUICListener(addr, certFile, keyFile string) (*quic.Listener, error) 
 //
 // 非 Windows 下先清理残留 Socket 文件，再创建监听并设置权限。
 func createUnixListener(path string, perm os.FileMode) (net.Listener, error) {
+	// 检查路径是否为目录（os.Remove 可删除空目录，导致误清理后监听成功）
+	if info, err := os.Stat(path); err == nil && info.IsDir() {
+		return nil, fmt.Errorf("ginx：Unix Socket 路径为目录而非 Socket 文件，路径 %s", path)
+	}
+
 	// 清理残留 Socket 文件
 	if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
 		return nil, fmt.Errorf("ginx：Unix Socket 残留文件清理失败，路径 %s：%w", path, err)
